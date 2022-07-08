@@ -9,7 +9,12 @@
   },
   "dependencies": {
     "core-js": "^3.8.3",
-    "vue": "^3.2.13"
+    "filepond": "^4.30.4",
+    "filepond-plugin-file-validate-size": "^2.2.7",
+    "filepond-plugin-file-validate-type": "^1.2.8",
+    "filepond-plugin-image-preview": "^4.6.11",
+    "vue": "^3.2.13",
+    "vue-filepond": "^7.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
