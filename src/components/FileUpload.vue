@@ -30,7 +30,8 @@ export default {
   name: "FileUpload",
   data: function () {
     return {
-      uploadedItems: []
+      uploadedItems: [],
+      filePond: null
     };
   },
   mounted: function () {
@@ -38,7 +39,7 @@ export default {
         FilePondPluginFileValidateType,
         FilePondPluginImagePreview
     );
-    const filePond = new FilePond.create(
+    this.filePond = new FilePond.create(
         this.$refs.filepond, {
           server: {
             // eslint-disable-next-line no-unused-vars
@@ -90,7 +91,7 @@ export default {
           }
         }
     );
-    filePond.on('processfile', this.handleProcessFile.bind(this))
+    this.filePond.on('processfile', this.handleProcessFile.bind(this))
   },
   methods: {
     doFetch: (query) => {
@@ -146,6 +147,7 @@ export default {
         size: fileItem.fileSize
       }, null, 4))
       this.uploadedItems.push(fileItem)
+      this.filePond.removeFile(fileItem)
     },
     // // v-on:processfiles="handleProcessFiles"
     // handleProcessFiles: function() {
