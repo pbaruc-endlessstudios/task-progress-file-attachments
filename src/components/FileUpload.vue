@@ -1,5 +1,8 @@
 <template>
   <div id="app">
+    <div v-for="(uploadedItem, index) in uploadedItems" :key="uploadedItem.filename" class="uploaded-files">
+      <div class="uploaded-file-item">({{index}}) {{uploadedItem.filename}}</div>
+    </div>
     <input ref="filepond"
            type="file"
            class="filepond"
@@ -16,22 +19,26 @@ import * as FilePond from 'filepond';
 
 // Import FilePond styles
 import "filepond/dist/filepond.min.css";
+import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css";
 
 // Import image preview and file type validation plugins
 import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
-// import FilePondPluginImagePreview from "filepond-plugin-image-preview";
+import FilePondPluginImagePreview from "filepond-plugin-image-preview";
 
 
 export default {
   name: "FileUpload",
   data: function () {
-    return {};
+    return {
+      uploadedItems: []
+    };
   },
   mounted: function () {
     FilePond.registerPlugin(
-        FilePondPluginFileValidateType
+        FilePondPluginFileValidateType,
+        FilePondPluginImagePreview
     );
-    new FilePond.create(
+    const filePond = new FilePond.create(
         this.$refs.filepond, {
           server: {
             // eslint-disable-next-line no-unused-vars
@@ -83,6 +90,7 @@ export default {
           }
         }
     );
+    filePond.on('processfile', this.handleProcessFile.bind(this))
   },
   methods: {
     doFetch: (query) => {
@@ -94,7 +102,7 @@ export default {
         },
         body: JSON.stringify({query})
       })
-    }
+    },
     // handleFilePondInit: function () {
     //   console.log("FilePond has initialized");
     //
@@ -131,10 +139,14 @@ export default {
     // handleProcessFileRevert: function(file) {
     //   console.log("[handleProcessFileRevert] " + JSON.stringify({file}, null, 4))
     // },
-    // // v-on:processfile="handleProcessFile"
-    // handleProcessFile: function(file) {
-    //   console.log("[handleProcessFile] " + JSON.stringify({file}, null, 4))
-    // },
+    handleProcessFile: function(error, fileItem) {
+      console.log("[handleProcessFile] " + JSON.stringify({
+        name: fileItem.filename,
+        ext: fileItem.fileExtension,
+        size: fileItem.fileSize
+      }, null, 4))
+      this.uploadedItems.push(fileItem)
+    },
     // // v-on:processfiles="handleProcessFiles"
     // handleProcessFiles: function() {
     //   console.log("[handleProcessFiles]")
@@ -164,4 +176,13 @@ export default {
   components: {},
 };
 </script>
+<style scoped>
+.uploaded-files {
+  border: 1px solid red;
+}
+.uploaded-file-item {
+  border: 1px solid blue;
+}
+
+</style>
 
