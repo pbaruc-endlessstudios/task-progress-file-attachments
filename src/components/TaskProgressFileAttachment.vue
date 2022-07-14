@@ -1,7 +1,13 @@
 <template>
   <div id="root">
     <div v-for="(uploadedItem, index) in uploadedItems" :key="uploadedItem.fileId" class="uploaded-files">
-      <div class="uploaded-file-item">({{index}}) id:{{uploadedItem.fileId}}</div>
+      <div class="uploaded-file-item">
+        <div>Index: {{index}}</div>
+        <div>name:{{uploadedItem.name}}</div>
+        <div>mimeType:{{uploadedItem.mime_type}}</div>
+        <div><img v-bind:src="uploadedItem.file_url"  style="width: 100px; height: 100px"></div>
+
+      </div>
     </div>
     <input ref="filepond"
            type="file"
@@ -43,12 +49,54 @@ export default {
     };
   },
   mounted: function () {
+    window.taskProgressId = this.taskProgressId;
+
+    window.doFetch = (query) => {
+      return fetch("http://localhost:3003/graphql", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMwMX0.GMAjPGEKLE66zl49aZ6a7V134Syw2DjraRx7huwZS1o'
+        },
+        body: JSON.stringify({query})
+      })
+    },
+
+
+    window.doGetFiles = () => {
+      const taskProgressId = this.taskProgressId
+      if(!taskProgressId) {
+        return
+      }
+
+      window.doFetch(`
+        query {
+          getFilesForTaskProgress(input: { task_progress_id: ${taskProgressId} }) {
+            files {
+              name
+              mime_type
+              file_url
+            }
+          }
+        }
+      `)
+          .then(res => res.json())
+          .then(response => {
+            const files = response?.data?.getFilesForTaskProgress?.files
+            if(!files) {
+              return
+            }
+            this.uploadedItems = [...files]
+          });
+    }
+    window.doGetFiles();
+
+
     FilePond.registerPlugin(
         FilePondPluginFileValidateType,
         FilePondPluginImagePreview,
         FilePondPluginFileMetadata
     );
-
     this.filePond = new FilePond.create(
         this.$refs.filepond, {
           fileMetadataObject: {
@@ -62,7 +110,7 @@ export default {
 
 
               // must perform this asynchronously, don't put await, or the abort functions won't work
-              this.doFetch(`
+              window.doFetch(`
                   mutation {
                     createTaskProgressFileUploadLink(input: {name: "${file.name}", mime_type: "${file.type}", task_progress_id: ${metadata.taskProgressId}}){
                       secure_upload_url
@@ -108,21 +156,19 @@ export default {
         }
     );
     this.filePond.on('processfile', this.handleProcessFile.bind(this))
+
+
+  },
+  unmounted() {
+    if(this.filePond) {
+      this.filePond.destroy(this.$refs.filepond)
+    }
   },
   methods: {
-    doFetch: (query) => {
-      return fetch("http://localhost:3003/graphql", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjMwMX0.GMAjPGEKLE66zl49aZ6a7V134Syw2DjraRx7huwZS1o'
-        },
-        body: JSON.stringify({query})
-      })
-    },
+
     handleProcessFile: function(error, fileItem) {
       console.log("[handleProcessFile] serverId: " + fileItem.serverId)
-      this.uploadedItems.push({fileId: fileItem.serverId})
+      window.doGetFiles();
       this.filePond.removeFile(fileItem)
     },
   },
