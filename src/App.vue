@@ -1,18 +1,15 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png">
-<!--  <HelloWorld msg="Welcome to Your Vue.js App"/>-->
-  <FileUpload/>
+  <TaskProgressFileAttachment task-progress-id="800"/>
 </template>
 
 <script>
-import FileUpload from './components/FileUpload'
-// import HelloWorld from './components/HelloWorld'
+import TaskProgressFileAttachment from "@/components/TaskProgressFileAttachment";
 
 export default {
   name: 'App',
   components: {
-    FileUpload
-    // HelloWorld
+    TaskProgressFileAttachment,
   }
 }
 </script>
