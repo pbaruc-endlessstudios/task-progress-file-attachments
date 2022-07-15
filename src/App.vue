@@ -1,6 +1,6 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png">
-  <TaskProgressFileAttachment task-progress-id="800"/>
+  <TaskProgressFileAttachment task-progress-id="809"/>
 </template>
 
 <script>

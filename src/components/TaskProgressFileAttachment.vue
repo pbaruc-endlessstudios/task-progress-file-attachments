@@ -4,8 +4,10 @@
       <div class="uploaded-file-item">
         <div>Index: {{index}}</div>
         <div>name:{{uploadedItem.name}}</div>
+        <div>file_id:{{uploadedItem.file_id}}</div>
         <div>mimeType:{{uploadedItem.mime_type}}</div>
         <div><img v-bind:src="uploadedItem.file_url"  style="width: 100px; height: 100px"></div>
+        <div><button @click="onDelete(uploadedItem)" >Delete</button></div>
 
       </div>
     </div>
@@ -16,7 +18,7 @@
            multiple
            data-allow-reorder="true"
            data-max-file-size="3MB"
-           data-max-files="3">
+           data-max-files="1">
   </div>
 </template>
 
@@ -76,6 +78,7 @@ export default {
               name
               mime_type
               file_url
+              file_id
             }
           }
         }
@@ -156,6 +159,9 @@ export default {
         }
     );
     this.filePond.on('processfile', this.handleProcessFile.bind(this))
+    this.filePond.on('error', this.handleError.bind(this))
+    this.filePond.on('warning', this.handleWarning.bind(this))
+    this.filePond.on('addfile', this.handleAddFile.bind(this))
 
 
   },
@@ -165,12 +171,34 @@ export default {
     }
   },
   methods: {
+    onDelete: function(file) {
+      console.log("[onDelete] clicked!!!" + JSON.stringify(file))
 
+      window.doFetch(`
+        mutation {
+          deleteFile(input: { file_id: ${file.file_id}})
+        }
+      `).then(res => res.json())
+          .then(response => {
+            window.doGetFiles();
+            console.log("response: " + response)
+          })
+    },
     handleProcessFile: function(error, fileItem) {
       console.log("[handleProcessFile] serverId: " + fileItem.serverId)
       window.doGetFiles();
       this.filePond.removeFile(fileItem)
     },
+    handleError: function(error, arg) {
+      console.log("[handleError] error: " + error + ", " + arg)
+    },
+    handleWarning: function(error) {
+      alert("[handleWarning] error: " + JSON.stringify(error))
+    },
+    handleAddFile: function(error, arg) {
+      console.log("[handleAddFile] error: " + error + ", " + arg)
+    },
+
   },
 };
 </script>
