@@ -64,9 +64,10 @@ const initFilePond = (element, taskProgressId) => {
         server: {
           // eslint-disable-next-line no-unused-vars
           process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
+
+            // let's create a new formData request
             const filepondRequest = new XMLHttpRequest();
             const filepondFormData = new FormData();
-
 
             // must perform this asynchronously, don't put await, or the abort functions won't work
             doFetch(`
@@ -74,36 +75,58 @@ const initFilePond = (element, taskProgressId) => {
                     createTaskProgressFileUploadLink(input: {name: "${file.name}", mime_type: "${file.type}", task_progress_id: ${metadata.taskProgressId}}){
                       secure_upload_url
                       additional_s3_security_fields
-                      file_id
+                      file_id,
+                      file_instance_id
                     }
                   }
               `)
                 .then(res => res.json())
                 .then(response => {
+
+                  // extract the important fields secureUploadURL, etc...
                   const {
                     secure_upload_url: secureUploadURL,
                     additional_s3_security_fields: additionalFieldsStr,
-                    file_id: fileId
+                    file_id: fileId,
+                    file_instance_id: fileInstanceId
                   } = response.data.createTaskProgressFileUploadLink;
                   console.log("[RESPONSE] secureUploadURL: " + secureUploadURL)
                   console.log("[RESPONSE] additionalFields: " + additionalFieldsStr)
                   console.log("[RESPONSE] fileId: " + fileId)
+                  console.log("[RESPONSE] fileInstanceId: " + fileInstanceId)
 
+                  // append the additional fields from amazon to the formData post
                   const fields = JSON.parse(additionalFieldsStr)
                   for (const field in fields) {
                     filepondFormData.append(field, fields[field]);
                   }
 
+                  // of course append the actual file to the formData post
                   filepondFormData.append("file", file);
+
+                  // we listen for upload progress and update filePond widget
                   filepondRequest.upload.onprogress = function (e) {
                     progress(e.lengthComputable, e.loaded, e.total);
                   };
+
+                  // open a POST request to the secureUploadURL
                   filepondRequest.open("POST", secureUploadURL);
+
+                  // we listen for upload completion, where we inform graphql-api
+                  // service marking the fileInstance as uploaded
                   filepondRequest.onload = function () {
-                    load(`${fileId}`);
+                    doFetch(`
+                      mutation {
+                        markFileInstanceUploaded(input: {file_instance_id: ${fileInstanceId}})
+                      }
+                    `).then(() => load(`${fileId}`))
+                        .then(() => console.log("Marked uploaded fileInstanceId: " + fileInstanceId));
                   };
+
+                  // perform the upload
                   filepondRequest.send(filepondFormData);
-                });
+                }
+            );
 
             return {
               abort: () => {
@@ -154,7 +177,7 @@ export default {
   },
   methods: {
     isImageFile(mimeType) {
-      if(mimeType === 'image/jpeg')
+      if (mimeType === 'image/jpeg')
         return true;
       return false;
     },
