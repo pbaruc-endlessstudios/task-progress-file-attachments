@@ -1,6 +1,10 @@
 # es-file-upload
 
 ## Project setup
+This is the initial implementation of the es-file-upload components.
+
+
+## Project setup
 ```
 yarn install
 ```
