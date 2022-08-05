@@ -18,14 +18,16 @@
 
       </div>
     </div>
-    <input ref="filepond"
-           type="file"
-           class="filepond"
-           name="filepond"
-           multiple
-           data-allow-reorder="true"
-           data-max-file-size="3MB"
-           data-max-files="1">
+    <div class="base-filepond">
+      <input ref="filepond"
+             type="file"
+             class="filepond"
+             name="filepond"
+             multiple
+             data-allow-reorder="true"
+             data-max-file-size="3MB"
+             data-max-files="1">
+    </div>
   </div>
 </template>
 
@@ -38,7 +40,7 @@ import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css
 
 // Import image preview and file type validation plugins
 import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
-import FilePondPluginImagePreview from "filepond-plugin-image-preview";
+// import FilePondPluginImagePreview from "filepond-plugin-image-preview";
 import FilePondPluginFileMetadata from "filepond-plugin-file-metadata";
 
 const doFetch = (query) => {
@@ -55,7 +57,6 @@ const doFetch = (query) => {
 const initFilePond = (element, taskProgressId) => {
   FilePond.registerPlugin(
       FilePondPluginFileValidateType,
-      FilePondPluginImagePreview,
       FilePondPluginFileMetadata
   );
   const retVal = new FilePond.create(
@@ -280,6 +281,10 @@ export default {
 .root {
 }
 
+.filepond {
+  border: 2px solid red;
+}
+
 .image {
   height: auto;
   max-height: 200px;
@@ -293,6 +298,13 @@ export default {
 .uploaded-file-item {
   padding: 8px;
   border: 1px solid blue;
+}
+
+.base-filepond {
+  border: 1px solid red;
+  max-width: 100px;
+  overflow: hidden;
+
 }
 </style>
 
