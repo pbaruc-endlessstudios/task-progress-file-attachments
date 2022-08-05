@@ -1,6 +1,6 @@
 <template>
   <div class="app">
-    <TaskProgressFileAttachment task-progress-id="809"/>
+    <TaskProgressFileAttachment task-progress-id="804"/>
   </div>
 </template>
 

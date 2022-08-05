@@ -72,7 +72,7 @@ const initFilePond = (element, taskProgressId) => {
             // must perform this asynchronously, don't put await, or the abort functions won't work
             doFetch(`
                   mutation {
-                    createTaskProgressFileUploadLink(input: {name: "${file.name}", mime_type: "${file.type}", task_progress_id: ${metadata.taskProgressId}}){
+                    createFileUploadLink(input: {name: "${file.name}", mime_type: "${file.type}"}) {
                       secure_upload_url
                       additional_s3_security_fields
                       file_id,
@@ -89,7 +89,7 @@ const initFilePond = (element, taskProgressId) => {
                     additional_s3_security_fields: additionalFieldsStr,
                     file_id: fileId,
                     file_instance_id: fileInstanceId
-                  } = response.data.createTaskProgressFileUploadLink;
+                  } = response.data.createFileUploadLink;
                   console.log("[RESPONSE] secureUploadURL: " + secureUploadURL)
                   console.log("[RESPONSE] additionalFields: " + additionalFieldsStr)
                   console.log("[RESPONSE] fileId: " + fileId)
@@ -120,7 +120,23 @@ const initFilePond = (element, taskProgressId) => {
                         markFileInstanceUploaded(input: {file_instance_id: ${fileInstanceId}})
                       }
                     `).then(() => load(`${fileId}`))
-                        .then(() => console.log("Marked uploaded fileInstanceId: " + fileInstanceId));
+                        // successfully marked the file uploaded now attach
+                        .then(() => {
+                            doFetch(`
+                              mutation {
+                                attachFileToTaskProgress(input: {file_id: ${fileId}, task_progress_id: ${metadata.taskProgressId}})
+                              }
+                            `).then(res => res.json())
+                                .then(response => {
+                                  if(response?.data?.attachFileToTaskProgress) {
+                                    // all is well
+                                    console.log("Success attached file")
+                                  } else {
+                                    throw "Unable to attach file to TaskProgress"
+                                  }
+                                })
+                        }
+                    );
                   };
 
                   // perform the upload
