@@ -233,7 +233,7 @@ export default {
       // delete file mutation
       doFetch(`
         mutation {
-          deleteFile(input: { file_id: ${file.file_id}})
+          detachFileFromTaskProgress(input: { file_id: ${file.file_id}, task_progress_id: ${this.taskProgressId} })
         }
       `)
           // re-fetch files
